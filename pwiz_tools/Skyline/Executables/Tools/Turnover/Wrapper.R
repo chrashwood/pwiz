@@ -9,19 +9,18 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 
 #------------------------------------------------------------------------------------
 
-
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
 #------------------------------------------------------------------------------------
-# 
-# 
+
+
 # filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv"
 # tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover"
 # diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 # min.avg.turnover.score <<- as.numeric ("0")
 # min.isotope.dot.product <<- as.numeric ("0")
 # folder.name <- "Data"
-# Reference.Treatment.Group <- "OCR"
+# Reference.Condition <- "OCR"
 # Detection.Qvalue.threshold <- as.numeric ("1")
 # Filter.Q.Values <- TRUE
 # 
@@ -38,10 +37,10 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING FROM TURNOVER (comment out if running from RSTUDIO)
 #------------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------------
-# LOAD ARGUMENTS FROM SKYLINE #
-
+# 
+# #------------------------------------------------------------------------------------
+# # LOAD ARGUMENTS FROM SKYLINE #
+# 
 arguments <- commandArgs(trailingOnly=TRUE)
 #arguments <- c("C:\\Users\\alimarsh\\AppData\\Local\\Temp\\TurnoveR_Protein_Turnover_Report.csv", "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\bin\\x64\\Debug\\Tools\\Tool", "99", "0", "0", "Data", "OCR", "1", "1")
 #arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "OCR", "1", "1")
@@ -65,7 +64,7 @@ for (i in 1:9) {
   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
   if (i==5) min.isotope.dot.product <<- as.numeric (arg)
   if (i==6) folder.name <- arg
-  if (i==7) Reference.Treatment.Group <- arg
+  if (i==7) Reference.Condition <- arg
   if (i==8) Detection.Qvalue.threshold <- as.numeric (arg)
   if (i==9) Filter.Q.Values <- ifelse(arg=="1", TRUE, FALSE)
 }
@@ -105,7 +104,7 @@ if (is.null(df.input$Replicate.Name)) {
   # rename df columns with periods between words
   df.input <- rename_with(df.input, .fn = function(vector){
     return(c("Protein", "Replicate.Name", "Protein.Description", "Protein.Accession", "Protein.Gene", "Peptide", 
-             "File.Name", "Timepoint", "Treatment.Group", "Precursor.Charge", "Precursor.Mz", "Molecule.Formula", 
+             "File.Name", "Timepoint", "Condition", "Precursor.Charge", "Precursor.Mz", "Molecule.Formula", 
              "Precursor.Neutral.Mass", "Modified.Sequence", "Is.Decoy", "Detection.Q.Value", "Total.Area.MS1", 
              "Isotope.Dot.Product", "Product.Mz", "Product.Charge", "Fragment.Ion", "Isotope.Dist.Index", 
              "Isotope.Dist.Rank", "Isotope.Dist.Proportion", "Fragment.Ion.Type", "Area"))
@@ -114,6 +113,9 @@ if (is.null(df.input$Replicate.Name)) {
 }
 #------------------------------------------------------------------------------------
 
+
+#Create subfolder for storing many output files
+dir.create("Additional_Output_Data") # some output files are written out here, while the most important ones are written out to the working directory 
 
 #------------------------------------------------------------------------------------
 # RUN STEP 1 #
@@ -124,10 +126,10 @@ source(paste(tool.dir, "Step1_turnover_process_skyline_0915_2020_v1.R", sep="/")
 #------------------------------------------------------------------------------------
 # RUN STEP 2 #
 # single leucine data set (1 leucine)
-data.s.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_singleleucine_peps_date.csv", sep=""), stringsAsFactors = F)
+data.s.holder <- read.csv(paste(getwd(),"/Additional_Output_Data/Step1_Data_Output_Skyline_singleleucine_peps.csv", sep=""), stringsAsFactors = F)
 
 # multiple leucine data set (2,3,4 leucines)
-data.m.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_multileucine_peps_date.csv", sep=""), stringsAsFactors = F)
+data.m.holder <- read.csv(paste(getwd(),"/Additional_Output_Data/Step1_Data_Output_Skyline_multileucine_peps.csv", sep=""), stringsAsFactors = F)
 data.s <- data.s.holder
 data.m <- data.m.holder
 source(paste(tool.dir, "Step2_turnover_fit_skyline_0208_2021_v2.R", sep="/"))
@@ -141,7 +143,7 @@ source(paste(tool.dir, "Step2_turnover_fit_skyline_0208_2021_v2.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Additional_Output_Data/Turnover_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
 
 source(paste(tool.dir, "Step3_turnover_slope_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------
@@ -152,7 +154,7 @@ source(paste(tool.dir, "Step3_turnover_slope_skyline_0208_2021_v2.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Additional_Output_Data/Turnover_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
 
 source(paste(tool.dir, "Step4_turnover_statistics_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 26, 2021
+#updated: March 13, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 2:
@@ -13,7 +13,7 @@
 # OUTPUT: 
 # i. PDF of non-linear regression plots: Percent Newly Synthesized vs. Time
 # ii. Data table of non-linear model statistics
-# iii. Average x-intercepts by treatment.group
+# iii. Average x-intercepts by Condition
 
 ###########################
 ### Begin Script Step 2 ###
@@ -22,12 +22,11 @@
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
 #------------------------------------------------------------------------------------
-
+# 
 # 
 # #------------------------------------------------------------------------------------
 # # set working directory
-# #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") # MAC
-# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") # PC
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts")
 # #------------------------------------------------------------------------------------
 # 
 # 
@@ -48,16 +47,14 @@
 # # LOAD DATA
 # 
 # # single leucine data set (1 leucine)
-# # data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # MAC
-# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # PC
+# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Additional_Output_Data/Step1_Data_Output_Skyline_singleleucine_peps.csv", stringsAsFactors = F) # PC
 # 
 # # multiple leucine data set (2,3,4 leucines)
-# # data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # MAC
-# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # PC
+# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Additional_Output_Data/Step1_Data_Output_Skyline_multileucine_peps.csv", stringsAsFactors = F) # PC
 # #------------------------------------------------------------------------------------
 # 
-# # Reference Treatment.Group
-# Reference.Treatment.Group <- "OCon" # this should be assigned by the user 
+# # Reference condition
+# Reference.Condition <- "OCon" # this should be assigned by the user 
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
@@ -95,16 +92,16 @@ df <- df %>%
 #------------------------------------------------------------------------------------
 # PREP FOR MODEL
 
-# treatment.groups
-treatment.groups <- unique(df$Treatment.Group)
+# conditions
+conditions <- unique(df$Condition)
 
-# make a treatment.group vector for looping through all comparisons
-treatment.groups.loop <- treatment.groups[!treatment.groups==Reference.Treatment.Group] # keep all treatment.groups except for the reference treatment.group
+# make a conditions vector for looping through all comparisons
+conditions.loop <- conditions[!conditions==Reference.Condition] # keep all conditions except for the reference conditions
   
 # proteins
 prots <- unique(df$Protein.Accession)
 
-# time points
+# timepoints
 time <- sort(unique(df$Timepoint))
 #------------------------------------------------------------------------------------
 
@@ -114,35 +111,35 @@ time <- sort(unique(df$Timepoint))
 
 # initialize data frame to write out results from nonlinear model 
 # first figure out your column names since the number of columns is built off that
-# row size = (number of treatment.groups) * (number of proteins) ... per treatment.group, which is hopefully constant
+# row size = (number of conditions) * (number of proteins) ... per treatment.group, which is hopefully constant
 # col size = number of names in col.names
-col.names <- c("Protein.Accession", "Gene", "Treatment.Group", "No.Peptides", "No.Points", "a", "Pvalue.a", "b", "Pvalue.b", "Qvalue", "Res.Std.Error", "X.Intercept")
-df.model.output <- data.frame(matrix(nrow = 2*length(treatment.groups.loop)*length(prots), ncol = length(col.names)))
+col.names <- c("Protein.Accession", "Gene", "Condition", "No.Peptides", "No.Points", "a", "Pvalue.a", "b", "Pvalue.b", "Qvalue", "Res.Std.Error", "X.Intercept")
+df.model.output <- data.frame(matrix(nrow = 2*length(conditions.loop)*length(prots), ncol = length(col.names)))
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Turnover_step2_plots_date.pdf")
+pdf(file="Regressions_custom.pdf")
 par(mfrow=c(2,3))
 
 row.index <- 1 
 for(i in seq_along(unique(df$Protein.Accession))){
   print(i)
   
-  # subset combined data for treatment.groups and protein 
+  # subset combined data for conditions and protein 
   data.protein.loop <- subset(df, Protein.Accession == prots[i]) 
   
-  # subset reference data - do this before treatment.group loop below
-  data.ref <- subset(data.protein.loop, Treatment.Group==Reference.Treatment.Group) # ref will always be the user defined reference treatment group
+  # subset reference data - do this before condition loop below
+  data.ref <- subset(data.protein.loop, Condition==Reference.Condition) # ref will always be the user defined reference condition
   # subset variables Time and Percent.Newly.Synthesized to fit with model
   fit.ref <- subset(data.ref, select = c("Timepoint", "Perc.New.Synth")) %>% 
     dplyr::rename(x=Timepoint, y=Perc.New.Synth) %>% # rename to x and y for simiplicity in model
     dplyr::arrange(x) # ascending order by time.point
   
-  # loop through treatment.groups 
-  for(j in treatment.groups.loop){
+  # loop through conditions 
+  for(j in conditions.loop){
     
-    # subset variable treatment.groups data
-    data.var <- subset(data.protein.loop, Treatment.Group==j)
+    # subset variable conditions data
+    data.var <- subset(data.protein.loop, Condition==j)
     
     # subset variables Time and Percent.Newly.Synthesized to fit with model
     fit.var <- subset(data.var, select = c("Timepoint", "Perc.New.Synth")) %>%
@@ -168,15 +165,15 @@ for(i in seq_along(unique(df$Protein.Accession))){
           
           # write out model results 
           
-          # REFERENCE TREATMENT GROUP:
+          # REFERENCE CONDITION:
           # protein
           df.model.output[row.index, "Protein.Accession"] <- prots[i]
 
           # gene
           df.model.output[row.index, "Gene"] <- data.ref %>% pull(Protein.Gene) %>% unique()
 
-          # treatment.group
-          df.model.output[row.index, "Treatment.Group"] <- data.ref %>% pull(Treatment.Group) %>% unique()
+          # condition
+          df.model.output[row.index, "Condition"] <- data.ref %>% pull(Condition) %>% unique()
 
           # number of unique peptides
           df.model.output[row.index, "No.Peptides"] <- data.ref %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
@@ -188,13 +185,13 @@ for(i in seq_along(unique(df$Protein.Accession))){
           df.model.output[row.index, "a"] <- summary(m.ref)$coef["a", "Estimate"] %>% round(., digits=4)
 
           # p-value for parameter a
-          df.model.output[row.index, "Pvalue.a"] <- summary(m.ref)$coef["a", "Pr(>|t|)"] #%>% round(., digits=4)
+          df.model.output[row.index, "Pvalue.a"] <- summary(m.ref)$coef["a", "Pr(>|t|)"] # don't round
 
           # parameter b
           df.model.output[row.index, "b"] <- summary(m.ref)$coef["b", "Estimate"] %>% round(., digits=4)
 
           # p-value for parameter b
-          df.model.output[row.index, "Pvalue.b"] <- summary(m.ref)$coef["b", "Pr(>|t|)"] #%>% round(., digits=4)
+          df.model.output[row.index, "Pvalue.b"] <- summary(m.ref)$coef["b", "Pr(>|t|)"] # don't round
 
           # residual standard error
           df.model.output[row.index, "Res.Std.Error"] <- summary(m.ref)$sigma %>% round(., digits=4)
@@ -203,15 +200,15 @@ for(i in seq_along(unique(df$Protein.Accession))){
           df.model.output[row.index, "X.Intercept"] <- (1/summary(m.ref)$coef["b", "Estimate"])*log(1/summary(m.ref)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
           
           
-          # VARIABLE TREATMENT GROUP:
+          # VARIABLE CONDITION:
           # protein
           df.model.output[row.index+1, "Protein.Accession"] <- prots[i]
           
           # gene
           df.model.output[row.index+1, "Gene"] <- data.var %>% pull(Protein.Gene) %>% unique()
           
-          # treatment.group
-          df.model.output[row.index+1, "Treatment.Group"] <- data.var %>% pull(Treatment.Group) %>% unique()
+          # condition
+          df.model.output[row.index+1, "Condition"] <- data.var %>% pull(Condition) %>% unique()
           
           # number of unique peptides
           df.model.output[row.index+1, "No.Peptides"] <- data.var %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
@@ -223,13 +220,13 @@ for(i in seq_along(unique(df$Protein.Accession))){
           df.model.output[row.index+1, "a"] <- summary(m.var)$coef["a", "Estimate"] %>% round(., digits=4)
           
           # p-value for parameter a
-          df.model.output[row.index+1, "Pvalue.a"] <- summary(m.var)$coef["a", "Pr(>|t|)"] #%>% round(., digits=4)
+          df.model.output[row.index+1, "Pvalue.a"] <- summary(m.var)$coef["a", "Pr(>|t|)"] # don't round
           
           # parameter b
           df.model.output[row.index+1, "b"] <- summary(m.var)$coef["b", "Estimate"] %>% round(., digits=4)
           
           # p-value for parameter b
-          df.model.output[row.index+1, "Pvalue.b"] <- summary(m.var)$coef["b", "Pr(>|t|)"] #%>% round(., digits=4)
+          df.model.output[row.index+1, "Pvalue.b"] <- summary(m.var)$coef["b", "Pr(>|t|)"] # don't round
           
           # residual standard error
           df.model.output[row.index+1, "Res.Std.Error"] <- summary(m.var)$sigma %>% round(., digits=4)
@@ -239,17 +236,17 @@ for(i in seq_along(unique(df$Protein.Accession))){
           
           
           # PLOT
-          color.ref <- "blue" # set reference treatment.group color to blue
-          color.var <- "red" # set variable treatment.group color to red
+          color.ref <- "blue" # set reference condition color to blue
+          color.var <- "red" # set variable condition color to red
           # plot (x,y) data points
           plot(fit.ref, xlab = "Time (Days)", ylab = "Percent Newly Synthesized", xlim = c(0, max(time)), ylim = c(0,1), main=paste(unique(data.var[, "Protein.Accession"]), unique(data.var[, "Protein.Gene"])), pch=2, col=color.ref) # blue triangles
-          points(fit.var, pch=1, col=color.var) # variable treatment.group data points are red circles
+          points(fit.var, pch=1, col=color.var) # variable condition data points are red circles
           # plot model curves
           xg <- seq(from = 0, to = max(time), length = 3*max(time)) # create vector of inputs for predict function to use for graphing below - used for generating model curves
-          lines(xg, predict(m.ref, list(x = xg)), col = color.ref) # reference treatment.group model is blue curve
-          lines(xg, predict(m.var, list(x = xg)), col = color.var) # variable treatment.group model is red curve
+          lines(xg, predict(m.ref, list(x = xg)), col = color.ref) # reference condition model is blue curve
+          lines(xg, predict(m.var, list(x = xg)), col = color.var) # variable condition model is red curve
           # legend
-          legend("top", inset = 0.01, legend = c(unique(data.ref[, "Treatment.Group"]), unique(data.var[, "Treatment.Group"])), ncol = 2, cex = 0.8, lty = 1, col = c(color.ref, color.var)) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
+          legend("top", inset = 0.01, legend = c(unique(data.ref[, "Condition"]), unique(data.var[, "Condition"])), ncol = 2, cex = 0.8, lty = 1, col = c(color.ref, color.var)) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
         },
         error=function(e){
           message("Caught an error!")
@@ -276,13 +273,13 @@ for(i in seq_along(unique(df$Protein.Accession))){
       df.model.output[row.index, "Gene"] <- ifelse(length(unique(data.ref[, "Protein.Gene"]))==0, NA, unique(data.ref[, "Protein.Gene"])) # gene
       
       # treatment.group
-      df.model.output[ row.index, "Treatment.Group"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, unique(data.ref[, "Treatment.Group"])) # reference treatment.group
+      df.model.output[ row.index, "Condition"] <- ifelse(length(unique(data.ref[, "Condition"]))==0, NA, unique(data.ref[, "Condition"])) # reference condition
       
       # number of peptides
-      df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, length(unique(data.ref$Modified.Peptide.Seq))) # number of peptides in reference treatment.group
+      df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ref[, "Condition"]))==0, NA, length(unique(data.ref$Modified.Peptide.Seq))) # number of peptides in reference condition
       
       # number of points
-      df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, no.points.a) # number of points reference treatment.group
+      df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ref[, "Condition"]))==0, NA, no.points.a) # number of points reference condition
       
       
       # Variable treatment.group:
@@ -293,18 +290,18 @@ for(i in seq_along(unique(df$Protein.Accession))){
       df.model.output[row.index +1, "Gene"] <- ifelse(length(unique(data.var[, "Protein.Gene"]))==0, NA, unique(data.var[, "Protein.Gene"])) # gene
       
       # treatment.group
-      df.model.output[ row.index +1, "Treatment.Group"] <- ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, unique(data.var[, "Treatment.Group"])) # variable treatment.group
+      df.model.output[ row.index +1, "Condition"] <- ifelse(length(unique(data.var[, "Condition"]))==0, NA, unique(data.var[, "Condition"])) # variable condition
       
       # number of peptides
-      df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, length(unique(data.var$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in variable treatment.group
+      df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.var[, "Condition"]))==0, NA, length(unique(data.var$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in variable condition
       
       # number of points
-      df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, no.points.b) # number of points in variable treatment.group
+      df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Condition"]))==0, NA, no.points.b) # number of points in variable condition
       
     } # end trycatch
-    # increase row.index counter by 2 each cycle, since we are writing out data for two treatment.groups during each iteration of j through treatment.groups.loop
+    # increase row.index counter by 2 each cycle, since we are writing out data for two conditions during each iteration of j through conditions.loop
     row.index <- row.index + 2
-  } # end for; treatment.group level
+  } # end for; condition level
 } # end for; protein level
 
 graphics.off()
@@ -325,9 +322,9 @@ df.model.output <- df.model.output %>%
 
 df.model.output <- df.model.output %>%
   na.omit() %>% # drop rows with NA
-  unique() # get rid of duplicated rows from modeling the reference treatment.group multiple times
+  unique() # get rid of duplicated rows from modeling the reference condition multiple times
   
-write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FALSE)
+write.csv(df.model.output, file = "Additional_Output_Data/Regressions_custom.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -341,18 +338,18 @@ df.model.output.filtered <- df.model.output %>%
   filter(b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
 
 # write out filtered output
-write.csv(df.model.output.filtered, file = "Table_step2_output_filtered_date.csv", row.names = FALSE)
+write.csv(df.model.output.filtered, file = "Additional_Output_Data/Regressions_custom_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
-# Calculate median x-intercepts for each treatment.group group
+# Calculate median x-intercepts for each condition
 df.x.int.medians <- df.model.output %>%
-  dplyr::group_by(Treatment.Group) %>%
+  dplyr::group_by(Condition) %>%
   dplyr::summarise(Median.x.intercept=median(X.Intercept))
 
 # write out median
-write.csv(df.x.int.medians, file = "Table_step2_xintercepts_date.csv", row.names = FALSE)
+write.csv(df.x.int.medians, file = "Additional_Output_Data/Turnover_step2_xintercepts.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
