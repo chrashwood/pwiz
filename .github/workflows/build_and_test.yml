@@ -8,15 +8,28 @@ name: Unofficial toolset CI
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+    - 'pwiz_tools/BiblioSpec/*'
+    - 'pwiz_tools/MSConvertGUI/*'
+    - 'pwiz_tools/SeeMS/*'
+    - 'pwiz_tools/Shared/*'
+    - 'pwiz_tools/Skyline/*'
+    - 'pwiz_tools/Topograph/*'
   pull_request:
     branches: [ master ]
-  workflow_dispatch:
+    paths-ignore:
+    - 'pwiz_tools/BiblioSpec/*'
+    - 'pwiz_tools/MSConvertGUI/*'
+    - 'pwiz_tools/SeeMS/*'
+    - 'pwiz_tools/Shared/*'
+    - 'pwiz_tools/Skyline/*'
+    - 'pwiz_tools/Topograph/*'
  
 # There is a single job here called "build" (The word "build" is NOT a keyword, you can use anything there)
 jobs:
   build:
     # Just a free-text name to be descriptive
-    name: Test ${{ matrix.perl }} on ${{ matrix.os }}
+    name: Build with ${{ matrix.config.compiler }} on ${{ matrix.config.os }}
 
     strategy:
       fail-fast: false
@@ -24,19 +37,23 @@ jobs:
         config: 
 #        - {
 #            name: "Windows Latest MSVC",
-#            os: windows-latest
+#            os: windows-latest,
+#            compiler: 'latest MSVC'
 #          }
         - {
             name: "Ubuntu Latest GCC",
-            os: ubuntu-latest
+            os: ubuntu-latest,
+            compiler: 'latest g++'
           }
-        - {
-            name: "Ubuntu GCC 9",
-            os: ubuntu-latest
-          }
+#        - {
+#            name: "Ubuntu GCC 9",
+#            os: ubuntu-latest,
+#            compiler: g++-9
+#          }
         - {
             name: "macOS Latest Clang",
-            os: macos-latest
+            os: macos-latest,
+            compiler: 'latest clang'
           }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
@@ -45,6 +62,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v1
 
       - name: Print env
         run: |
@@ -59,6 +79,7 @@ jobs:
         if: startsWith(matrix.config.name, 'Ubuntu Latest GCC')
         run: |
           gcc --version
+
       - name: Install dependencies on ubuntu9
         if: startsWith(matrix.config.name, 'Ubuntu GCC 9')
         run: |
@@ -75,7 +96,8 @@ jobs:
         if: startsWith(matrix.config.os, 'macos')
         run: |
           clang --version
+          gcc --version
           
       - name: Build
         shell: bash
-        run: ./quickbuild.sh --abbreviate-paths -j2 pwiz
+        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-cores.outputs.count }} pwiz
