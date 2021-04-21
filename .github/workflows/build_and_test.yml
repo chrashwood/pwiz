@@ -43,17 +43,20 @@ jobs:
         - {
             name: "Ubuntu Latest GCC",
             os: ubuntu-latest,
-            compiler: 'latest g++'
+            compiler: 'latest g++',
+            toolset: 'toolset=gcc'
           }
 #        - {
 #            name: "Ubuntu GCC 9",
 #            os: ubuntu-latest,
-#            compiler: g++-9
+#            compiler: g++-9,
+#            toolset: 'toolset=gcc'
 #          }
         - {
             name: "macOS Latest Clang",
             os: macos-latest,
-            compiler: 'latest clang'
+            compiler: 'latest clang',
+            toolset: 'toolset=gcc'
           }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
@@ -64,6 +67,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Get number of CPU cores
+        id: cpu-count
         uses: SimenB/github-actions-cpu-cores@v1
 
       - name: Print env
@@ -100,4 +104,4 @@ jobs:
           
       - name: Build
         shell: bash
-        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-cores.outputs.count }} pwiz
+        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-cores.outputs.count }} pwiz ${{ matrix.config.toolset }}
