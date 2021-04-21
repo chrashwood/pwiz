@@ -69,11 +69,6 @@ jobs:
       - name: Get number of CPU cores
         id: cpu-count
         uses: SimenB/github-actions-cpu-cores@v1
-        run: |
-          echo ${{ steps.cpu-count.outputs.count }}
-          lscpu
-          lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
-          system_profiler SPHardwareDataType
 
       - name: Print env
         run: |
@@ -107,6 +102,13 @@ jobs:
           clang --version
           gcc --version
           
+      - name: Test vars
+        run: |
+          echo ${{ steps.cpu-count.outputs.count }}
+          lscpu
+          lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+          system_profiler SPHardwareDataType
+
       - name: Build
         shell: bash
         run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-cores.outputs.count }} pwiz executables ${{ matrix.config.toolset }}
