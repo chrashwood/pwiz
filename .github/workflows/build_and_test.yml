@@ -15,22 +15,10 @@ on:
 # There is a single job here called "build" (The word "build" is NOT a keyword, you can use anything there)
 jobs:
   build:
-    # This creates two dimensions:
-    #   One will be called "os"  with the list of the names of the 3 runners of GitHub Actions
-    #   The other indicates version numbers of perl
-    # The words "os" and "perl" are free text here, they are like variable names.
-    # GitHub Action will run the job on 3x2 = 6 different setups
-    strategy:
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest']
-        gcc: [ 'g++-8', 'clang-7', 'clang-3.6' ]
- 
-    # Using the value from the matrix above we select the platform (operating system) to run on
-    runs-on: ${{ matrix.os }}
- 
     # Just a free-text name to be descriptive
     name: Test ${{ matrix.perl }} on ${{ matrix.os }}
- strategy:
+
+    strategy:
       fail-fast: false
       matrix:
         config: 
@@ -39,17 +27,20 @@ jobs:
 #            os: windows-latest
 #          }
         - {
-            name: "Ubuntu_Latest_GCC",
+            name: "Ubuntu Latest GCC",
             os: ubuntu-latest
           }
         - {
-            name: "Ubuntu_GCC_9",
+            name: "Ubuntu GCC 9",
             os: ubuntu-latest
           }
         - {
             name: "macOS Latest Clang",
             os: macos-latest
           }
+ 
+    # Using the value from the matrix above we select the platform (operating system) to run on
+    runs-on: ${{ matrix.os }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -65,13 +56,13 @@ jobs:
 #        # cmd "${{ matrix.config.environment_script }}"
 
       - name: Install dependencies on ubuntu
-        if: startsWith(matrix.config.name, 'Ubuntu_Latest_GCC')
+        if: startsWith(matrix.config.name, 'Ubuntu Latest GCC')
         run: |
 #          sudo apt-get update
 #          sudo apt-get install ninja-build cmake
           gcc --version
       - name: Install dependencies on ubuntu9
-        if: startsWith(matrix.config.name, 'Ubuntu_GCC_9')
+        if: startsWith(matrix.config.name, 'Ubuntu GCC 9')
         run: |
           echo Update gcc-9 =======================================================================
           echo gcc version before
