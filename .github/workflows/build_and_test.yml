@@ -40,7 +40,7 @@ jobs:
           }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.config.os }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
