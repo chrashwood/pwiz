@@ -58,8 +58,6 @@ jobs:
       - name: Install dependencies on ubuntu
         if: startsWith(matrix.config.name, 'Ubuntu Latest GCC')
         run: |
-#          sudo apt-get update
-#          sudo apt-get install ninja-build cmake
           gcc --version
       - name: Install dependencies on ubuntu9
         if: startsWith(matrix.config.name, 'Ubuntu GCC 9')
