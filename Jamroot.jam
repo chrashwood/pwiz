@@ -176,8 +176,16 @@ rule without-binary-msdata ( properties * )
    }
 }
 
+if [ modules.peek : NT ]
+{
+    path-constant PWIZ_BUILD_PATH : build-nt-x86 ; # force x86 since .NET projects assume that location
+}
+else
+{
+    path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+}
+
 path-constant PWIZ_ROOT_PATH : . ;
-path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
 path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 

@@ -56,7 +56,7 @@ jobs:
             name: "macOS Latest Clang",
             os: macos-latest,
             compiler: 'latest clang',
-            toolset: 'toolset=gcc'
+            toolset: 'toolset=darwin'
           }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
