@@ -104,4 +104,4 @@ jobs:
 
       - name: Build
         shell: bash
-        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} pwiz executables ${{ matrix.config.toolset }}
+        run: ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
