@@ -317,8 +317,6 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
 
-        <toolset>msvc:<response-file>file               # auto-detection of max command-line length broken on Windows Server?
-
         # link-time optimization for release builds
         #<variant>release:<lto>on
 
@@ -400,6 +398,7 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
+        <response-file>file               # auto-detection of max command-line length broken on Windows Server?
     ;
 
 
