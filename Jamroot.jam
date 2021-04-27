@@ -333,6 +333,9 @@ project pwiz
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
 
+        # prevent warning about _BSD_SOURCE deprecation
+        <toolset>gcc:<define>_DEFAULT_SOURCE
+
         # disable "warning: suggest parentheses around '&&' within '||'"
         <toolset>gcc:<cxxflags>-Wno-parentheses
         <toolset>clang:<cxxflags>-Wno-parentheses
